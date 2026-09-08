@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="description" content="Money Tracker - pencatat keuangan harian gratis dengan Google Sheets">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="assets/icons/icon.svg">
+  <link rel="stylesheet" href="style.css">
+  <title>MONEY TRACKER</title>
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div>
+        <div class="brand">MONEY TRACKER</div>
+        <div id="greeting" class="muted">Keuangan lebih teratur.</div>
+      </div>
+      <button id="themeBtn" class="icon-btn" aria-label="Ganti tema">☾</button>
+    </header>
+
+    <main class="page-wrap">
+      <!-- DASHBOARD -->
+      <section id="page-dashboard" class="page active">
+        <div class="page-heading">
+          <div>
+            <h1>Dashboard</h1>
+            <p class="muted" id="currentMonthLabel"></p>
+          </div>
+          <button class="primary small" id="refreshBtn">↻ Refresh</button>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card balance">
+            <span class="stat-label">Saldo Saat Ini</span>
+            <strong id="balance">Rp 0</strong>
+          </article>
+          <article class="stat-card income">
+            <span class="stat-label">Pemasukan Bulan Ini</span>
+            <strong id="monthIncome">Rp 0</strong>
+          </article>
+          <article class="stat-card expense">
+            <span class="stat-label">Pengeluaran Bulan Ini</span>
+            <strong id="monthExpense">Rp 0</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Jumlah Transaksi</span>
+            <strong id="transactionCount">0</strong>
+          </article>
+        </div>
+
+        <article class="card savings-card">
+          <div class="section-row">
+            <div>
+              <span class="stat-label">Target Tabungan</span>
+              <h2 id="targetAmount">Rp 0</h2>
+            </div>
+            <span id="targetPercent" class="badge">0%</span>
+          </div>
+          <div class="progress"><span id="targetProgress"></span></div>
+          <div class="section-row tiny">
+            <span id="savingProgressText">Rp 0 / Rp 0</span>
+            <span id="targetStatus"></span>
+          </div>
+        </article>
+
+        <div class="chart-grid">
+          <article class="card">
+            <div class="section-row">
+              <h2>Pemasukan vs Pengeluaran</h2>
+            </div>
+            <canvas id="monthlyChart" height="220"></canvas>
+          </article>
+          <article class="card">
+            <div class="section-row">
+              <h2>Pengeluaran per Kategori</h2>
+            </div>
+            <canvas id="categoryChart" height="220"></canvas>
+          </article>
+        </div>
+
+        <article class="card">
+          <div class="section-row">
+            <h2>Transaksi Terakhir</h2>
+            <button class="text-btn" data-page="transactions">Lihat semua</button>
+          </div>
+          <div id="recentTransactions" class="transaction-list"></div>
+        </article>
+
+        <button class="fab" id="addFab">＋ Tambah Transaksi</button>
+      </section>
+
+      <!-- TRANSACTIONS -->
+      <section id="page-transactions" class="page">
+        <div class="page-heading">
+          <div>
+            <h1>Riwayat Transaksi</h1>
+            <p class="muted">Semua transaksi tersimpan di Google Sheets.</p>
+          </div>
+          <button class="primary small" id="addBtn">＋ Tambah</button>
+        </div>
+
+        <div class="filters card">
+          <input id="searchInput" type="search" placeholder="Cari transaksi...">
+          <div class="filter-row">
+            <select id="typeFilter">
+              <option value="">Semua</option>
+              <option value="Pemasukan">Pemasukan</option>
+              <option value="Pengeluaran">Pengeluaran</option>
+            </select>
+            <select id="categoryFilter"><option value="">Semua kategori</option></select>
+            <input id="monthFilter" type="month">
+          </div>
+        </div>
+
+        <div id="allTransactions" class="transaction-list"></div>
+      </section>
+
+      <!-- REPORT -->
+      <section id="page-report" class="page">
+        <div class="page-heading">
+          <div>
+            <h1>Laporan</h1>
+            <p class="muted">Analisis pemasukan dan pengeluaran.</p>
+          </div>
+        </div>
+
+        <div class="period-tabs">
+          <button class="period active" data-period="today">Hari Ini</button>
+          <button class="period" data-period="week">Minggu Ini</button>
+          <button class="period" data-period="month">Bulan Ini</button>
+          <button class="period" data-period="year">Tahun Ini</button>
+          <button class="period" data-period="custom">Custom</button>
+        </div>
+        <div id="customPeriod" class="card custom-period hidden">
+          <input id="reportStart" type="date">
+          <input id="reportEnd" type="date">
+          <button class="primary" id="applyCustom">Terapkan</button>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card income"><span class="stat-label">Total Pemasukan</span><strong id="reportIncome">Rp 0</strong></article>
+          <article class="stat-card expense"><span class="stat-label">Total Pengeluaran</span><strong id="reportExpense">Rp 0</strong></article>
+          <article class="stat-card"><span class="stat-label">Total Selisih</span><strong id="reportNet">Rp 0</strong></article>
+        </div>
+
+        <div class="chart-grid">
+          <article class="card"><h2>Pemasukan vs Pengeluaran</h2><canvas id="reportMonthlyChart" height="240"></canvas></article>
+          <article class="card"><h2>Pengeluaran Berdasarkan Kategori</h2><canvas id="reportCategoryChart" height="240"></canvas></article>
+        </div>
+
+        <article class="card">
+          <h2>Total Pengeluaran per Kategori</h2>
+          <div id="categoryReport" class="report-list"></div>
+        </article>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="page-settings" class="page">
+        <div class="page-heading">
+          <div>
+            <h1>Pengaturan</h1>
+            <p class="muted">Atur aplikasi sesuai kebutuhan.</p>
+          </div>
+        </div>
+
+        <article class="card settings-card">
+          <label>Nama Pengguna
+            <input id="userName" type="text" placeholder="User">
+          </label>
+          <label>Target Tabungan
+            <input id="targetInput" type="number" min="0" step="1" placeholder="5000000">
+          </label>
+          <button class="primary" id="saveSettings">Simpan Pengaturan</button>
+        </article>
+
+        <article class="card settings-card">
+          <h2>Tampilan</h2>
+          <div class="theme-options">
+            <button class="theme-option" data-theme="light">☀ Light Mode</button>
+            <button class="theme-option" data-theme="dark">☾ Dark Mode</button>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Konfigurasi</h2>
+          <p class="muted">API URL hanya perlu diisi satu kali di <code>app.js</code>.</p>
+          <p id="apiStatus" class="status-text"></p>
+        </article>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Navigasi utama">
+      <button class="nav-item active" data-page="dashboard"><span>⌂</span><small>Dashboard</small></button>
+      <button class="nav-item" data-page="transactions"><span>↔</span><small>Transaksi</small></button>
+      <button class="nav-item" data-page="report"><span>▥</span><small>Laporan</small></button>
+      <button class="nav-item" data-page="settings"><span>⚙</span><small>Pengaturan</small></button>
+    </nav>
+  </div>
+
+  <!-- TRANSACTION MODAL -->
+  <div id="transactionModal" class="modal hidden">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h2 id="formTitle">Tambah Transaksi</h2>
+        <button class="icon-btn" data-close-modal>×</button>
+      </div>
+      <form id="transactionForm">
+        <input type="hidden" id="editId">
+        <label>Tanggal*
+          <input id="dateInput" type="date" required>
+        </label>
+        <label>Jenis Transaksi*
+          <select id="typeInput" required>
+            <option value="">Pilih jenis</option>
+            <option value="Pemasukan">Pemasukan</option>
+            <option value="Pengeluaran">Pengeluaran</option>
+          </select>
+        </label>
+        <label>Kategori*
+          <select id="categoryInput" required><option value="">Pilih kategori</option></select>
+        </label>
+        <label>Deskripsi
+          <input id="descriptionInput" type="text" maxlength="150" placeholder="Contoh: Nasi Goreng">
+        </label>
+        <label>Nominal*
+          <input id="amountInput" type="text" inputmode="numeric" placeholder="Rp 15.000" required>
+        </label>
+        <label>Metode Pembayaran*
+          <select id="paymentInput" required>
+            <option value="">Pilih metode</option>
+            <option>Tunai</option>
+            <option>Transfer</option>
+            <option>E-Wallet</option>
+            <option>Debit</option>
+            <option>Kartu Kredit</option>
+            <option>Lainnya</option>
+          </select>
+        </label>
+        <label>Catatan
+          <textarea id="noteInput" rows="3" maxlength="300" placeholder="Catatan tambahan..."></textarea>
+        </label>
+        <button class="primary submit-btn" type="submit">Simpan Transaksi</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="loading" class="loading hidden"><div class="spinner"></div><span>Memuat...</span></div>
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
